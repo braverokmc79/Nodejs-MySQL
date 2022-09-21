@@ -125,30 +125,33 @@ var app = http.createServer(function (request, response) {
 
 
   } else if (pathname === '/update') {
-    fs.readdir('./data', function (error, filelist) {
-      var filteredId = path.parse(queryData.id).base;
-      fs.readFile(`data/${filteredId}`, 'utf8', function (err, description) {
-        var title = queryData.id;
-        var list = template.list(filelist);
-        var html = template.HTML(title, list,
+    db.query("select * from topic", function (erro, topics) {
+      if (erro) throw erro;
+
+      db.query(`SELECT * FROM topic WHERE id=?`, [queryData.id], function (error2, topic) {
+        if (error2) throw error2;
+        var list = template.list(topics);
+        var html = template.HTML(topic[0].title, list,
           `
-            <form action="/update_process" method="post">
-              <input type="hidden" name="id" value="${title}">
-              <p><input type="text" name="title" placeholder="title" value="${title}"></p>
-              <p>
-                <textarea name="description" placeholder="description">${description}</textarea>
-              </p>
-              <p>
-                <input type="submit">
-              </p>
-            </form>
-            `,
-          `<a href="/create">create</a> <a href="/update?id=${title}">update</a>`
+                <form action="/update_process" method="post">
+                  <input type="hidden" name="id" value="${topic[0].title}">
+          <p><input type="text" name="title" placeholder="title" value="${topic[0].title}"></p>
+          <p>
+          <textarea name="description" placeholder="description">${topic[0].description}</textarea>
+                  </p>
+      <p>
+        <input type="submit">
+      </p>
+                </form>
+      `,
+          `<a href="/create" > create</a> <a href="/update?id=${topic[0].id}">update</a>`
         );
         response.writeHead(200);
         response.end(html);
       });
+
     });
+
   } else if (pathname === '/update_process') {
     var body = '';
     request.on('data', function (data) {
@@ -159,9 +162,9 @@ var app = http.createServer(function (request, response) {
       var id = post.id;
       var title = post.title;
       var description = post.description;
-      fs.rename(`data/${id}`, `data/${title}`, function (error) {
-        fs.writeFile(`data/${title}`, description, 'utf8', function (err) {
-          response.writeHead(302, { Location: `/?id=${title}` });
+      fs.rename(`data / ${id} `, `data / ${title} `, function (error) {
+        fs.writeFile(`data / ${title} `, description, 'utf8', function (err) {
+          response.writeHead(302, { Location: `/? id = ${title} ` });
           response.end();
         })
       });
@@ -175,8 +178,8 @@ var app = http.createServer(function (request, response) {
       var post = qs.parse(body);
       var id = post.id;
       var filteredId = path.parse(id).base;
-      fs.unlink(`data/${filteredId}`, function (error) {
-        response.writeHead(302, { Location: `/` });
+      fs.unlink(`data / ${filteredId} `, function (error) {
+        response.writeHead(302, { Location: `/ ` });
         response.end();
       })
     });
